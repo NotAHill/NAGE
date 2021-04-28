@@ -12,6 +12,7 @@ t   m g
 
 
 #pragma once
+#pragma comment(lib, "winmm.lib")
 
 #ifndef NAGE_H
 #define NAGE_H
@@ -63,6 +64,188 @@ struct KeyState
 	bool pressed;
 	bool released;
 	bool held;
+};
+
+template<typename T>
+struct Vector2
+{
+private:
+	int w = 1;
+
+public:
+	T x = 0;
+	T y = 0;
+
+	Vector2() : x(0), y(0), w(1) {}
+	Vector2(T _x, T _y) : x(_x), y(_y), w(1) {}
+	Vector2(const Vector2& vec) : x(vec.x), y(vec.y), w(1) {}
+	Vector2& operator= (const Vector2& vec) = default;
+
+	Vector2 operator+(const Vector2& rhs) const { return Vector2(this->x + rhs.x, this->y + rhs.y); }
+	Vector2 operator-(const Vector2& rhs) const { return Vector2(this->x - rhs.x, this->y - rhs.y); }
+
+	Vector2 operator*(const T& rhs) const { return Vector2(this->x * rhs, this->y * rhs); }
+	Vector2 operator/(const T& rhs) const { return Vector2(this->x / rhs, this->y / rhs); }
+
+	Vector2& operator+=(const Vector2& rhs) const { this->x + rhs.x; this->y + rhs.y; return *this; }
+	Vector2& operator-=(const Vector2& rhs) const { this->x - rhs.x; this->y - rhs.y; return *this; }
+
+	Vector2& operator*=(const T& rhs) const { this->x* rhs; this->y* rhs; return *this; }
+	Vector2& operator/=(const T& rhs) const { this->x / rhs; this->y / rhs; return *this; }
+
+	Vector2 operator+() const { return { +x, +y }; }
+	Vector2 operator-() const { return { -x, -y }; }
+};
+
+template<typename T>
+struct Matrix3
+{
+	T matrix[3][3];
+	Matrix3() { Reset(); }
+	Matrix3(const Matrix3& mat)
+	{
+		for (int c = 0; c < 3; c++)
+			for (int r = 0; r < 3; r++)
+				this->matrix[c][r] = mat.matrix[c][r];
+	}
+	Matrix3& operator=(const Matrix3& mat) = default;
+	T& operator()(const int c, const int r) const { return this->matrix[c][r]; }
+
+	void Reset()
+	{
+		matrix[0][0] = 1.0f; matrix[0][1] = 0.0f; matrix[0][2] = 0.0f;
+		matrix[1][0] = 0.0f; matrix[1][1] = 1.0f; matrix[1][2] = 0.0f;
+		matrix[2][0] = 0.0f; matrix[2][1] = 0.0f; matrix[2][2] = 1.0f;
+	}
+
+	Matrix3 operator*(const Matrix3& mat) const
+	{
+		Matrix3 result;
+		for (int c = 0; c < 3; c++)
+			for (int r = 0; r < 3; r++)
+				result.matrix[c][r] = this->matrix[0][r] * mat.matrix[c][0] + this->matrix[1][r] * mat.matrix[c][1] + this->matrix[2][r] * mat.matrix[c][2];
+		return result;
+	}
+
+	Matrix3 operator*(const T& scalar) const
+	{
+		Matrix3 result;
+		for (int c = 0; c < 3; c++)
+			for (int r = 0; r < 3; r++)
+				result[c][r] *= scalar;
+		return result;
+	}
+
+	Vector2<T> operator*(const Vector2<T>& rhs) const
+	{
+		Vector2<T> result = rhs;
+		for (int c = 0; c < 3; c++)
+			for (int r = 0; r < 3; r++)
+				result[c] += rhs[r] * matrix[c][r];
+		return result;
+	}
+
+	Matrix3& operator*=(const Matrix3& mat) const
+	{
+		for (int c = 0; c < 3; c++)
+			for (int r = 0; r < 3; r++)
+				this->matrix[c][r] = this->matrix[0][r] * mat.matrix[c][0] + this->matrix[1][r] * mat.matrix[c][1] + this->matrix[2][r] * mat.matrix[c][2];
+		return *this;
+	}
+
+
+	Matrix3 Transpose() const
+	{
+		Matrix3 result = this;
+		for (int c = 0; c < 3; c++)
+			for (int r = 0; r < 3; r++)
+				this->matrix[r][c] = result.matrix[c][r];
+		return this;
+	}
+
+	Matrix3 Cofactors() const
+	{
+		matrix[0][1] *= -1;
+		matrix[1][0] *= -1;
+		matrix[1][2] *= -1;
+		matrix[2][1] *= -1;
+		return this;
+	}
+
+	Matrix3 Minors() const
+	{
+		Matrix3 result;
+		for (int c = 0; c < 3; c++)
+			for (int r = 0; r < 3; r++)
+				this->matrix[c][r] = this->matrix[(c + 1) % 3][(r + 1) % 3] * this->matrix[(c + 2) % 3][(r + 2) % 3] - this->matrix[(c + 1) % 3][(r + 2) % 3] * this->matrix[(c + 2) % 3][(r + 1) % 3];
+		return this;
+	}
+
+	Matrix3 Invert() const
+	{
+		float det = this->Determinant();
+		if (det != 0)
+		{
+			this->matrix = this->Minors();
+			this->matrix = this->Cofactors();
+			this->matrix = this->Transpose();
+
+			return this * (1.0f / det);
+		}
+	}
+
+	float Determinant() const
+	{
+		float sum = 0;
+		for (int c = 0; c < 3; c++)
+			sum += (this->matrix[0][c] * (c == 1 ? -1 : 1) * (this->matrix[1][(c + 1) % 3] * this->matrix[2][(c + 2) % 3] - this->matrix[2][(c + 1) % 3] * this->matrix[1][(c + 2) % 3]));
+		return this;
+	}
+
+	Matrix3 Rotate(const float theta) const
+	{
+		Matrix3 result;
+
+		result.matrix[0][0] = cosf(theta);	result.matrix[0][1] = sinf(theta);	result.matrix[0][2] = 0.0f;
+		result.matrix[1][0] = -sinf(theta);	result.matrix[1][1] = cosf(theta);	result.matrix[1][2] = 0.0f;
+		result.matrix[2][0] = 0.0f;			result.matrix[2][1] = 0.0f;			result.matrix[2][2] = 1.0f;
+
+		return result * this;
+	}
+
+	Matrix3 Translate(const Vector2<float>& vec) { return Translate(vec.x, vec.y); }
+	Matrix3 Translate(const float ox, const float oy) const
+	{
+		Matrix3 result;
+
+		result.matrix[0][0] = 1.0f;	result.matrix[0][1] = 0.0f;	result.matrix[0][2] = ox;
+		result.matrix[1][0] = 0.0f;	result.matrix[1][1] = 1.0f;	result.matrix[1][2] = oy;
+		result.matrix[2][0] = 0.0f;	result.matrix[2][1] = 0.0f;	result.matrix[2][2] = 1.0f;
+
+		return result * this;
+	}
+
+	Matrix3 Shear(const Vector2<float>& vec) { return Shear(vec.x, vec.y); }
+	Matrix3 Shear(const float ox, const float oy) const
+	{
+		Matrix3 result;
+		result.matrix[0][0] = 1.0f;	result.matrix[0][1] = ox;		result.matrix[0][2] = 0.0f;
+		result.matrix[1][0] = oy;		result.matrix[1][1] = 1.0f;	result.matrix[1][2] = 0.0f;
+		result.matrix[2][0] = 0.0f;	result.matrix[2][1] = 0.0f;	result.matrix[2][2] = 1.0f;
+
+		return result * this;
+	}
+
+	Matrix3 Scale(const Vector2<float>& vec) { return Scale(vec.x, vec.y); }
+	Matrix3 Scale(const float ox, const float oy) const
+	{
+		Matrix3 result;
+		result.matrix[0][0] = ox;	result.matrix[0][1] = 0.0f;	result.matrix[0][2] = 0.0f;
+		result.matrix[1][0] = 0.0f;	result.matrix[1][1] = oy;	result.matrix[1][2] = 0.0f;
+		result.matrix[2][0] = 0.0f;	result.matrix[2][1] = 0.0f;	result.matrix[2][2] = 1.0f;
+
+		return result * this;
+	}
 };
 
 class Engine
@@ -176,7 +359,7 @@ public:
 		}
 	}
 
-	void Draw(Vector2<int> vec1, short c = PIXEL_SOLID, short col = WHITE)
+	virtual void Draw(const Vector2<int>& vec1, short c = PIXEL_SOLID, short col = WHITE)
 	{
 		Draw(vec1.x, vec1.y, c, col);
 	}
@@ -188,7 +371,7 @@ public:
 		screen_buffer[y * screen_width + x].Attributes = col;
 	}
 
-	void Fill(Vector2<int> vec1, Vector2<int> vec2, short c = PIXEL_SOLID, short col = WHITE)
+	void Fill(const Vector2<int>& vec1, const Vector2<int>& vec2, short c = PIXEL_SOLID, short col = WHITE)
 	{
 		Fill(vec1.x, vec1.y, vec2.x, vec2.y, c, col);
 	}
@@ -218,7 +401,7 @@ public:
 		if (y >= screen_height) y = screen_height;
 	}
 
-	void DrawString(Vector2<int> vec1, std::wstring c, short col = WHITE, bool alpha = 0)
+	void DrawString(const Vector2<int>& vec1, std::wstring c, short col = WHITE, bool alpha = 0)
 	{
 		DrawString(vec1.x, vec1.y, c, col, alpha);
 	}
@@ -236,7 +419,7 @@ public:
 		}
 	}
 
-	void DrawLine(Vector2<int> vec1, Vector2<int> vec2, short c = PIXEL_SOLID, short col = WHITE, int width = 1)
+	void DrawLine(const Vector2<int>& vec1, const Vector2<int>& vec2, short c = PIXEL_SOLID, short col = WHITE, int width = 1)
 	{
 		DrawLine(vec1.x, vec1.y, vec2.x, vec2.y, c, col, width);
 	}
@@ -281,7 +464,7 @@ public:
 				{ x = x2; y = y2; xe = x1;}
 
 			Draw(x, y, c, col);
-			
+
 			for (i = 0; x<xe; i++)
 			{
 				x = x + 1;
@@ -328,163 +511,5 @@ public:
 
 	KeyState Key(int key_id) { return keys[key_id]; }
 };
-
-template<typename T>
-struct Vector2
-{
-private:
-	int w = 1;
-
-public:
-	T x = 0;
-	T y = 0;
-
-	Vector2() : x(0), y(0), w(1) {}
-	Vector2(T _x, T _y) : x(_x), y(_y), w(1) {}
-
-	Vector2 operator+(const Vector2& rhs) const { return Vector2(this->x + rhs.x, this->y + rhs.y); }
-	Vector2 operator-(const Vector2& rhs) const { return Vector2(this->x - rhs.x, this->y - rhs.y); }
-
-	Vector2 operator*(const T& rhs) const { return Vector2(this->x * rhs, this->y * rhs); }
-	Vector2 operator/(const T& rhs) const { return Vector2(this->x / rhs, this->y / rhs); }
-
-	Vector2& operator+=(const Vector2& rhs) const { this->x + rhs.x; this->y + rhs.y; return *this; }
-	Vector2& operator-=(const Vector2& rhs) const { this->x - rhs.x; this->y - rhs.y; return *this; }
-
-	Vector2& operator*=(const T& rhs) const { this->x * rhs; this->y * rhs; return *this; }
-	Vector2& operator/=(const T& rhs) const { this->x / rhs; this->y / rhs; return *this; }
-
-	Vector2 operator+() const { return { +x, +y}; }
-	Vector2 operator-() const { return { -x, -y }; }
-};
-
-template<typename T>
-struct Matrix3
-{
-	T matrix[3][3];
-	Matrix3() { Reset(); }
-	Matrix3(const Matrix3& mat)
-	{
-		Matrix3 result;
-		for (int c = 0; c < 3; c++)
-			for (int r = 0; r < 3; r++)
-				result[c][r] = mat[c][r];
-		return result;
-	}
-	Matrix3& operator=(const Matrix3& mat) = default;
-
-	void Reset()
-	{
-		matrix[0][0] = 1.0f; matrix[0][1] = 0.0f; matrix[0][2] = 0.0f;
-		matrix[1][0] = 0.0f; matrix[1][1] = 1.0f; matrix[1][2] = 0.0f;
-		matrix[2][0] = 0.0f; matrix[2][1] = 0.0f; matrix[2][2] = 1.0f;
-	}
-
-	Matrix3 operator*(Matrix3& mat)
-	{
-		result = Matrix3();
-		for (int c = 0; c < 3; c++)
-			for (int r = 0; r < 3; r++)
-				result[c][r] = matrix[0][r] * mat[c][0] + matrix[1][r] * mat[c][1] + matrix[2][r] * mat[c][2];
-		return result;
-	}
-
-	Matrix3& operator*=(Matrix3& mat)
-	{
-		for (int c = 0; c < 3; c++)
-			for (int r = 0; r < 3; r++)
-				matrix[c][r] = matrix[0][r] * mat[c][0] + matrix[1][r] * mat[c][1] + matrix[2][r] * mat[c][2];
-		return *this;
-	}
-
-	Matrix3& Transpose()
-	{
-		Matrix3 result = matrix;
-		for (int c = 0; c < 3; c++)
-			for (int r = 0; r < 3; r++)
-				matrix[r][c] = result[c][r];
-		return *this;
-	}
-
-	Matrix3& Cofactors()
-	{
-		matrix[0][1] *= -1;
-		matrix[1][0] *= -1;
-		matrix[1][2] *= -1;
-		matrix[2][1] *= -1;
-		return *this;
-	}
-
-	Vector2 operator*(Vector2& rhs)
-	{
-		Vector2 result;
-		for (int c = 0; c < 3; c++)
-			for (int r = 0; r < 3; r++)
-				result[c] += rhs[r] * matrix[c][r] ;
-		return result;
-	}
-
-	Matrix3& Rotate(float theta)
-	{
-		matrix[0][0] = cosf(theta);		matrix[0][1] = sinf(theta);		matrix[0][2] = 0.0f;
-		matrix[1][0] = -sinf(theta);	matrix[1][1] = cosf(theta);		matrix[1][2] = 0.0f;
-		matrix[2][0] = 0.0f;			matrix[2][1] = 0.0f;			matrix[2][2] = 1.0f;
-
-		return *this;
-	}
-
-	Matrix3& Translate(Vector2<float> vec)
-	{
-		return Translate(vec.x, vec.y);
-	}
-
-	Matrix3& Translate(float ox, float oy)
-	{
-		matrix[0][0] = 1.0f;	matrix[0][1] = 0.0f;	matrix[0][2] = ox;
-		matrix[1][0] = 0.0f;	matrix[1][1] = 1.0f;	matrix[1][2] = oy;
-		matrix[2][0] = 0.0f;	matrix[2][1] = 0.0f;	matrix[2][2] = 1.0f;
-
-		return *this;
-	}
-
-	Matrix3& Shear(Vector2<float> vec)
-	{
-		return Shear(vec.x, vec.y);
-	}
-
-	Matrix3& Shear(float ox, float oy)
-	{
-		matrix[0][0] = 1.0f;	matrix[0][1] = ox;		matrix[0][2] = 0.0f;
-		matrix[1][0] = oy;		matrix[1][1] = 1.0f;	matrix[1][2] = 0.0f;
-		matrix[2][0] = 0.0f;	matrix[2][1] = 0.0f;	matrix[2][2] = 1.0f;
-
-		return *this;
-	}
-
-	Matrix3& Scale(Vector2<float> vec)
-	{
-		return Scale(vec.x, vec.y);
-	}
-
-	Matrix3& Scale(float ox, float oy)
-	{
-		matrix[0][0] = ox;		matrix[0][1] = 0.0f;	matrix[0][2] = 0.0f;
-		matrix[1][0] = 0.0f;	matrix[1][1] = oy;		matrix[1][2] = 0.0f;
-		matrix[2][0] = 0.0f;	matrix[2][1] = 0.0f;	matrix[2][2] = 1.0f;
-
-		return *this;
-	}
-
-	Matrix3& Invert()
-	{
-
-		Transpose();
-		Cofactors();
-
-		return *this;
-	}
-};
-
-
 
 #endif // !NAGE_H
