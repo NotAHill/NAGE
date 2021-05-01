@@ -3,38 +3,28 @@
 
 int main()
 {
-	Engine game(800, 600, 20, L"Test");
+	NAGE::Matrix3<int> mat;
+	auto& m = mat.matrix;
 
-	float theta = 0.0f;
+	m[0][0] = 1.f; m[0][1] = 3.f; m[0][2] = 1.f;
+	m[1][0] = 0.f; m[1][1] = 4.f; m[1][2] = 1.f;
+	m[2][0] = 2.f; m[2][1] = -1.f; m[2][2] = 0.f;
 	
-	int x1 = 10, y1 = 10;
-	int x2 = 5, y2 = 5;
+	std::cout << mat.str() << std::endl;
+	std::cout << mat.Determinant() << std::endl;
+	
+	mat = mat.Minors();
 
-	float r = std::sqrtf((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+	std::cout << mat.str() << std::endl;
 
-	bool looping = true;
-	while (looping)
-	{
-		game.Clear(BLUE);
+	mat = mat.Cofactors();
 
-		if (game.Key(VK_UP).held)
-		{
-			theta += 1.0f * game.GetDt();
-			game.DrawString(0, 0, L"Key: Up Pressed");
-		}
+	std::cout << mat.str() << std::endl;
 
-		if (game.Key(VK_DOWN).held)
-		{
-			theta -= 1.0f * game.GetDt();
-			game.DrawString(0, 0, L"Key: Down Pressed");
-		}
+	mat = mat.Transpose();
 
-		
+	std::cout << mat.str() << std::endl;
 
-		game.DrawLine(x1, y1, (int)(x1 + cosf(theta) * r), (int)(y1 + sinf(theta) * r), PIXEL_SOLID, RED);
-
-		game.Update();
-	}
 
 	return 0;
 }
