@@ -22,6 +22,7 @@ t   m g
 #include <chrono>
 #include <vector>
 #include <cmath>
+#include <string>
 
 #include <thread>
 #include <atomic>
@@ -71,116 +72,106 @@ namespace NAGE
 	template<typename T>
 	struct Vector2
 	{
-		union
-		{
-			T xy[3];
-			struct
-			{
-				T x, y, w;
-			};
-		};
+		T x = 0.0f, y = 0.0f;
+		static const T w = 1.0f;
 
-		Vector2() : x(0), y(0), w(1.f) {}
+		/*Vector2() : x(0), y(0), w(1.f) {}
 		Vector2(T _x, T _y) : x(_x), y(_y), w(1.f) {}
 		Vector2(const Vector2& vec) : x(vec.x), y(vec.y), w(1.f) {}
-		Vector2& operator= (const Vector2& vec) = default;
-		T operator[] (const size_t& sz) const { return this->xy[sz]; }
-
-		Vector2 operator+(const Vector2& rhs) const { return Vector2(this->x + rhs.x, this->y + rhs.y); }
-		Vector2 operator-(const Vector2& rhs) const { return Vector2(this->x - rhs.x, this->y - rhs.y); }
-
-		Vector2 operator*(const T& rhs) const { return Vector2(this->x * rhs, this->y * rhs); }
-		Vector2 operator/(const T& rhs) const { return Vector2(this->x / rhs, this->y / rhs); }
+		Vector2& operator= (const Vector2& vec) = default;*/
+		
+		T operator[](const size_t& i) const { switch (i) { case 0: return x; break; case 1: return y; break; case 2: return w; break; } }
+		T& operator[](const size_t& i) { switch (i) { case 0: return x; break; case 1: return y; break; } }
 
 		Vector2& operator+=(const Vector2& rhs) const { this->x + rhs.x; this->y + rhs.y; return *this; }
 		Vector2& operator-=(const Vector2& rhs) const { this->x - rhs.x; this->y - rhs.y; return *this; }
-
 		Vector2& operator*=(const T& rhs) const { this->x* rhs; this->y* rhs; return *this; }
 		Vector2& operator/=(const T& rhs) const { this->x / rhs; this->y / rhs; return *this; }
-
 		Vector2 operator+() const { return { +x, +y }; }
 		Vector2 operator-() const { return { -x, -y }; }
-
 		T mag() { return T(std::sqrt(x * x + y * y)); }
-		T mag2() { return x * x + y * y; }
-
-		T dot(const Vector2& rhs) { return this->x * rhs.x + this->y * rhs.y; }
-		T cross(const Vector2& rhs) { return this->x * rhs.y - this->y * rhs.x; }
-
-		Vector2 norm() { T r = 1 / mag(); return Vector2(x * r, y * r); }
-
+		T mag2() { return T(x * x + y * y); }
+		Vector2 perp() { return Vector2(-y, x); }
+		Vector2 norm() { T r = 1 / mag(); return { x * r, y * r }; }
 		std::string str() { return "(" + std::to_string(x) + ", " + std::to_string(y) + ")"; }
 	};
+	template<typename T> const T Vector2<T>::w = 1.0f;
+	template<typename T> inline Vector2<T> operator+(const Vector2<T>& lhs, const Vector2<T>& rhs) { return { lhs.x + rhs.x, lhs.y + rhs.y }; }
+	template<typename T> inline Vector2<T> operator-(const Vector2<T>& lhs, const Vector2<T>& rhs) { return { lhs.x - rhs.x, lhs.y - rhs.y }; }
+	template<typename T> inline Vector2<T> operator*(const Vector2<T>& lhs, const Vector2<T>& rhs) { return { lhs.x * rhs.x, lhs.y * rhs.y }; }
+
+	template<typename T> inline Vector2<T> operator*(const T& lhs, const Vector2<T>& rhs) { return { rhs.x * lhs, rhs.y * lhs}; }
+	template<typename T> inline Vector2<T> operator*(const Vector2<T>& lhs, const T& rhs) { return rhs * lhs; }
+	template<typename T> inline Vector2<T> operator/(const Vector2<T>& lhs, const T& rhs) { return (1.0f / rhs) * lhs; }
+
+	template<typename T> inline T cross(const Vector2<T>& lhs, const Vector2<T>& rhs) { return T(lhs.x * rhs.y - lhs.y * rhs.x); }
+	template<typename T> inline T dot(const Vector2<T>& lhs, const Vector2<T>& rhs) { return T(lhs.x * rhs.x + lhs.y * rhs.y); }
 
 	template<typename T>
 	struct Vector3
 	{
-		union
-		{
-			T xyz[4];
-			struct
-			{
-				T x, y, z, w;
-			};
-		};
+		T x = 0.0f, y = 0.0f, z = 0.0f;
+		static const T w;
 
-		Vector3() : x(0), y(0), z(0), z(1.f) {}
+		/*Vector3() : x(0), y(0), z(0), w(1.f) {}
 		Vector3(T _x, T _y, T _z) : x(_x), y(_y), z(_z), w(1.f) {}
 		Vector3(const Vector3& vec) : x(vec.x), y(vec.y), z(vec.z), w(1.f) {}
-		Vector3& operator= (const Vector3& vec) = default;
-		T operator[](const size_t& sz) const { return this->xyz[sz]; }
+		Vector3& operator= (const Vector3& vec) = default;*/
+				
+		T& operator[](const size_t& i) { switch (i) { case 0: return x; break; case 1: return y; break; case 2: return z; break; } }
+		T operator[](const size_t& i) const { switch (i) { case 0: return x; break; case 1: return y; break; case 2: return z; break; case 3: return w; break; } }
 
-		Vector3 operator+(const Vector3& rhs) const { return Vector3(this->x + rhs.x, this->y + rhs.y, this->z + rhs.z); }
-		Vector3 operator-(const Vector3& rhs) const { return Vector3(this->x - rhs.x, this->y - rhs.y, this->z - rhs.z); }
 
-		Vector3 operator*(const T& rhs) const { return Vector3(this->x * rhs, this->y * rhs, this->z * rhs); }
-		Vector3 operator/(const T& rhs) const { return Vector3(this->x / rhs, this->y / rhs, this->z / rhs); }
 
 		Vector3& operator+=(const Vector3& rhs) const { this->x + rhs.x; this->y + rhs.y; this->z + rhs.z; return *this; }
 		Vector3& operator-=(const Vector3& rhs) const { this->x - rhs.x; this->y - rhs.y; this->z - rhs.z; return *this; }
-
 		Vector3& operator*=(const T& rhs) const { this->x* rhs; this->y* rhs; this->z* rhs; return *this; }
 		Vector3& operator/=(const T& rhs) const { this->x / rhs; this->y / rhs; this->z / rhs; return *this; }
-
 		Vector3 operator+() const { return { +x, +y, +z }; }
 		Vector3 operator-() const { return { -x, -y, -z }; }
-
 		T mag() { return T(std::sqrt(x*x + y*y + z*z)); }
-		T mag2() { return x*x + y*y + z*z;}
-
-		T dot(const Vector3& rhs) { return this->x * rhs.x + this->y * rhs.y + this->z * rhs.z; }
-		Vector3 cross(const Vector3& rhs) { return Vector3(this->y*rhs.z - this->z*rhs.y, this->z * rhs.x - this->x * rhs.z, this->x*rhs.y - this->y*rhs.z); }
-
-		Vector3 norm() { T r = 1 / mag(); return Vector3(x * r, y * r, z * r); }
-
+		T mag2() { return x*x + y*y + z*z; }
+		Vector3 norm() { T r = 1 / mag(); return { x * r, y * r, z * r }; }
 		std::string str() { return "(" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) + ")"; }
-	
-		friend Vector3 plane_intersection(Vector3<float>& plane_pos, Vector3<float>& plane_normal, Vector3<float>& line_start, Vector3<float>& line_end)
-		{
-			plane_normal = plane_normal.norm();
-			float plane_d = -plane_normal.dot(plane_pos);
-			float ad = line_start.dot(plane_normal);
-			float bd = line_end.dot(plane_normal);
-			float t = (-plane_d - ad) / (bd - ad);
-			Vector3<float> start_to_end = line_end - line_start;
-			Vector3<float> intersection_line = start_to_end * t;
-			return line_start + intersection_line;
-		}
 	};
+	template<typename T> const T Vector3<T>::w = 1.0f;
+	template<typename T> inline Vector3<T> operator+(const Vector3<T>& lhs, const Vector3<T>& rhs) { return { lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z }; }
+	template<typename T> inline Vector3<T> operator-(const Vector3<T>& lhs, const Vector3<T>& rhs) { return { lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z }; }
+	template<typename T> inline Vector3<T> operator*(const Vector3<T>& lhs, const Vector3<T>& rhs) { return { lhs.x * rhs.x, lhs.y * rhs.y, lhs.z * rhs.z }; }
+
+	template<typename T> inline Vector3<T> operator*(const T& lhs, const Vector3<T>& rhs) { return { rhs.x * lhs, rhs.y * lhs, rhs.z * lhs }; }
+	template<typename T> inline Vector3<T> operator*(const Vector3<T>& lhs, const T& rhs) { return rhs * lhs; }
+	template<typename T> inline Vector3<T> operator/(const Vector3<T>& lhs, const T& rhs) { return (1.0f / rhs) * lhs; }
+
+	template<typename T> inline Vector3<T> cross(const Vector3<T>& lhs, const Vector3<T>& rhs) { return { lhs.y * rhs.z - lhs.z * rhs.y, lhs.z * rhs.x - lhs.x * rhs.z, lhs.x * rhs.y - lhs.y * rhs.z }; }
+	template<typename T> inline T dot(const Vector3<T>& lhs, const Vector3<T>& rhs) { return T(lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z); }
+
+	template<typename T> inline Vector3<T> plane_intersection(Vector3<T>& plane_pos, Vector3<T>& plane_normal, Vector3<T>& line_start, Vector3<T>& line_end)
+	{
+		plane_normal = plane_normal.norm();
+		T plane_d = -dot(plane_normal, plane_pos);
+		T ad = dot(line_start, plane_normal);
+		T bd = dot(line_end, plane_normal);
+		T t = (-plane_d - ad) / (bd - ad);
+		Vector3<T> start_to_end = line_end - line_start;
+		Vector3<T> intersection_line = start_to_end * t;
+		return line_start + intersection_line;
+	}
 
 	template<typename T>
 	struct Matrix3
 	{
-		T matrix[3][3];
-		Matrix3() { Reset(); }
+		T matrix[3][3] = { 0 };
+		/*Matrix3() { Reset(); }
 		Matrix3(const Matrix3& mat)
 		{
 			for (int c = 0; c < 3; c++)
 				for (int r = 0; r < 3; r++)
 					this->matrix[c][r] = mat.matrix[c][r];
 		}
-		Matrix3& operator=(const Matrix3& mat) = default;
-		T operator()(const int c, const int r) { return matrix[c][r]; }
+		Matrix3& operator=(const Matrix3& mat) = default;*/
+		T& operator()(const int& c, const int& r) { return matrix[c][r]; }
+		T operator()(const int& c, const int& r) const { return matrix[c][r]; }
 
 		void Reset()
 		{
@@ -215,7 +206,7 @@ namespace NAGE
 					result[c] += rhs[r] * matrix[c][r];
 			return result;
 		}
-
+		
 		Matrix3& operator*=(const Matrix3& mat) 
 		{
 			for (int c = 0; c < 3; c++)
@@ -270,9 +261,7 @@ namespace NAGE
 				result = this->Minors();
 				result = result.Cofactors();
 				result = result.Transpose();
-
 				result *= 1.0f / det;
-
 				return result;
 			}
 		}
@@ -285,62 +274,15 @@ namespace NAGE
 			return sum;
 		}
 
-		Matrix3 Rotate(const float theta) const
-		{
-			Matrix3 result;
-
-			result.matrix[0][0] = cosf(theta);	result.matrix[0][1] = sinf(theta);	result.matrix[0][2] = 0.0f;
-			result.matrix[1][0] = -sinf(theta);	result.matrix[1][1] = cosf(theta);	result.matrix[1][2] = 0.0f;
-			result.matrix[2][0] = 0.0f;			result.matrix[2][1] = 0.0f;			result.matrix[2][2] = 1.0f;
-
-			return result * this;
-		}
-
-		Matrix3 Translate(const Vector3<float>& vec) { return Translate(vec.x, vec.y); }
-		Matrix3 Translate(const float ox, const float oy) const
-		{
-			Matrix3 result;
-
-			result.matrix[0][0] = 1.0f;	result.matrix[0][1] = 0.0f;	result.matrix[0][2] = ox;
-			result.matrix[1][0] = 0.0f;	result.matrix[1][1] = 1.0f;	result.matrix[1][2] = oy;
-			result.matrix[2][0] = 0.0f;	result.matrix[2][1] = 0.0f;	result.matrix[2][2] = 1.0f;
-
-			return result * this;
-		}
-
-		Matrix3 Shear(const Vector3<float>& vec) { return Shear(vec.x, vec.y); }
-		Matrix3 Shear(const float ox, const float oy) const
-		{
-			Matrix3 result;
-			result.matrix[0][0] = 1.0f;	result.matrix[0][1] = ox;		result.matrix[0][2] = 0.0f;
-			result.matrix[1][0] = oy;		result.matrix[1][1] = 1.0f;	result.matrix[1][2] = 0.0f;
-			result.matrix[2][0] = 0.0f;	result.matrix[2][1] = 0.0f;	result.matrix[2][2] = 1.0f;
-
-			return result * this;
-		}
-
-		Matrix3 Scale(const Vector3<float>& vec) { return Scale(vec.x, vec.y); }
-		Matrix3 Scale(const float ox, const float oy) const
-		{
-			Matrix3 result;
-			result.matrix[0][0] = ox;	result.matrix[0][1] = 0.0f;	result.matrix[0][2] = 0.0f;
-			result.matrix[1][0] = 0.0f;	result.matrix[1][1] = oy;	result.matrix[1][2] = 0.0f;
-			result.matrix[2][0] = 0.0f;	result.matrix[2][1] = 0.0f;	result.matrix[2][2] = 1.0f;
-
-			return result * this;
-		}
-
 		std::string str() const
 		{
 			std::string str = "";
 			for (int c = 0; c < 3; c++)
 			{
-				str += "[ ";
+				str += "[\t";
 				for (int r = 0; r < 3; r++)
-				{
-					str += std::to_string(this->matrix[c][r]) + " ";
-				}
-				str += " ]\n";
+					str += std::to_string(this->matrix[c][r]) + "\t";
+				str += "]\n";
 			}
 			return str;
 		}
@@ -349,52 +291,27 @@ namespace NAGE
 	template<typename T>
 	struct Matrix4
 	{
-		T matrix[4][4];
-		Matrix4() { Reset(); }
+		T matrix[4][4] = { 0 };
+		/*Matrix4() { Reset(); }
 		Matrix4(const Matrix4& mat)
 		{
 			for (int c = 0; c < 4; c++)
 				for (int r = 0; r < 4; r++)
 					this->matrix[c][r] = mat.matrix[c][r];
 		}
-		Matrix4& operator=(const Matrix4& mat) = default;
-		T operator()(const int c, const int r) { return matrix[c][r]; }
+		Matrix4& operator=(const Matrix4& mat) = default;*/
+		
+		T& operator()(const int& c, const int& r) { return matrix[c][r]; }
+		T operator()(const int& c, const int& r) const { return matrix[c][r]; }
 
-		void Reset()
-		{
+		/*void Reset()
+		{ 
 			matrix[0][0] = 1.0f; matrix[0][1] = 0.0f; matrix[0][2] = 0.0f; matrix[0][3] = 0.0f;
 			matrix[1][0] = 0.0f; matrix[1][1] = 1.0f; matrix[1][2] = 0.0f; matrix[1][3] = 0.0f;
 			matrix[2][0] = 0.0f; matrix[2][1] = 0.0f; matrix[2][2] = 1.0f; matrix[2][3] = 0.0f;
 			matrix[3][0] = 0.0f; matrix[3][1] = 0.0f; matrix[3][2] = 0.0f; matrix[3][3] = 1.0f;
-		}
-
-		Matrix4 operator*(const Matrix4& mat) const
-		{
-			Matrix4 result;
-			for (int c = 0; c < 4; c++)
-				for (int r = 0; r < 4; r++)
-					result.matrix[c][r] = this->matrix[0][r] * mat.matrix[c][0] + this->matrix[1][r] * mat.matrix[c][1] + this->matrix[2][r] * mat.matrix[c][2];
-			return result;
-		}
-
-		Matrix4 operator*(const T& scalar) const
-		{
-			Matrix4 result;
-			for (int c = 0; c < 4; c++)
-				for (int r = 0; r < 4; r++)
-					result[c][r] *= scalar;
-			return result;
-		}
-
-		Vector3<T> operator*(const Vector3<T>& rhs) const
-		{
-			Vector3<T> result = rhs;
-			for (int c = 0; c < 4; c++)
-				for (int r = 0; r < 4; r++)
-					result[c] += rhs[r] * matrix[c][r];
-			return result;
-		}
-
+		}*/
+		
 		Matrix4& operator*=(const Matrix4& mat)
 		{
 			for (int c = 0; c < 4; c++)
@@ -421,85 +338,6 @@ namespace NAGE
 			return result;
 		}
 
-		Matrix4 RotateX(const float theta) const
-		{
-			Matrix4 result;
-			result.matrix[0][0] = 1.0f;
-			result.matrix[1][1] = cosf(theta);
-			result.matrix[1][2] = sinf(theta);
-			result.matrix[2][1] = -sinf(theta);
-			result.matrix[2][2] = cosf(theta);
-			result.matrix[3][3] = 1.0f;
-			return *this * result;
-		}
-
-		Matrix4 RotateY(const float theta) const
-		{
-			Matrix4 result;
-			result.matrix[0][0] = cosf(theta);
-			result.matrix[0][2] = sinf(theta);
-			result.matrix[2][0] = -sinf(theta);
-			result.matrix[1][1] = 1.0f;
-			result.matrix[2][2] = cosf(theta);
-			result.matrix[3][3] = 1.0f;
-			return *this * result;
-		}
-
-		Matrix4 RotateZ(const float theta) const
-		{
-			Matrix4 result;
-			result.matrix[0][0] = cosf(theta);
-			result.matrix[0][1] = sinf(theta);
-			result.matrix[1][0] = -sinf(theta);
-			result.matrix[1][1] = cosf(theta);
-			result.matrix[2][2] = 1.0f;
-			result.matrix[3][3] = 1.0f;
-			return *this * result;
-		}
-
-		Matrix4 Translate(const Vector3<float>& vec) { return Translate(vec.x, vec.y, vec.z); }
-		Matrix4 Translate(const float ox, const float oy, const float oz) const
-		{
-			Matrix4 result;
-			result.matrix[0][0] = 1.0f;
-			result.matrix[1][1] = 1.0f;
-			result.matrix[2][2] = 1.0f;
-			result.matrix[3][3] = 1.0f;
-			result.matrix[3][0] = ox;
-			result.matrix[3][1] = oy;
-			result.matrix[3][2] = oz;
-			return *this * result;
-		}
-
-		friend Matrix4 Projection(float fov_deg, float aspect_ratio, float z_near, float z_far)
-		{
-			float fov_rad = 1.0f / tanf(fov_deg * 0.5f / 180.0f * 3.14159f);
-			Matrix4 result;
-			result.matrix[0][0] = aspect_ratio * fov_rad;
-			result.matrix[1][1] = fov_rad;
-			result.matrix[2][2] = z_far / (z_far - z_near);
-			result.matrix[3][2] = (-z_far * z_near) / (z_far - z_near);
-			result.matrix[2][3] = 1.0f;
-			result.matrix[3][3] = 0.0f;
-			return result;
-		}
-
-		friend Matrix4 PointAt(Vector3<float>& pos, Vector3<float>& target, Vector3<float>& up)
-		{
-			Vector3<float> new_forward = target - pos;
-			new_forward = new_forward.norm();
-			Vector3<float> new_up = up - (new_forward * up.dot(new_forward));
-			new_up = new_up.norm();
-			Vector3<float> new_right = new_up.cross(new_forward);
-
-			Matrix4 result;
-			result.matrix[0][0] = new_right.x;	result.matrix[0][1] = new_right.y;	result.matrix[0][2] = new_right.z;	result.matrix[0][3] = 0.0f;
-			result.matrix[1][0] = new_up.x;		result.matrix[1][1] = new_up.y;		result.matrix[1][2] = new_up.z;		result.matrix[1][3] = 0.0f;
-			result.matrix[2][0] = new_forward.x;result.matrix[2][1] = new_forward.y;result.matrix[2][2] = new_forward.z;result.matrix[2][3] = 0.0f;
-			result.matrix[3][0] = pos.x;		result.matrix[3][1] = pos.y;		result.matrix[3][2] = pos.z;		result.matrix[3][3] = 1.0f;
-			return *this * result;
-		}
-
 		// Only for Rotation/Translation Matrices
 		Matrix4 Invert() const 
 		{
@@ -514,57 +352,212 @@ namespace NAGE
 			return result;
 		}
 
-		Matrix4 ShearX(const float oy, const float oz) const
-		{
-			Matrix4 result;
-			result.matrix[1][0] = oy;
-			result.matrix[2][0] = oz;
-			return *this * result;
-		}
-
-		Matrix4 ShearY(const float ox, const float oz) const
-		{
-			Matrix4 result; 
-			result.matrix[0][1] = ox;
-			result.matrix[2][1] = oz;
-			return *this * result;
-		}
-
-		Matrix4 ShearZ(const float ox, const float oy) const
-		{
-			Matrix4 result;
-			result.matrix[0][2] = ox;
-			result.matrix[1][2] = oy;
-			return *this * result;
-		}
-
-
-		Matrix4 Scale(const Vector3<float>& vec) { return Scale(vec.x, vec.y, vec.z); }
-		Matrix4 Scale(const float ox, const float oy, const float oz) const
-		{
-			Matrix4 result;
-			result.matrix[0][0] = ox;
-			result.matrix[1][1] = oy;
-			result.matrix[2][2] = oz;
-			return *this * result;
-		}
-
 		std::string str() const
 		{
 			std::string str = "";
 			for (int c = 0; c < 4; c++)
 			{
-				str += "[ ";
+				str += "[\t";
 				for (int r = 0; r < 4; r++)
-				{
-					str += std::to_string(this->matrix[c][r]) + " ";
-				}
-				str += " ]\n";
+					str += std::to_string(this->matrix[c][r]) + "\t";
+				str += "]\n";
 			}
 			return str;
 		}
 	};
 
+	template<typename T> inline Matrix4<T> Identity() 
+	{
+		return
+		{
+			1.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f,
+			0.0f, 0.0f,	0.0f, 1.0f
+		};
+	}
+	
+	template<typename T> inline Matrix4<T> Zero() 
+	{
+		return
+		{
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.0f,	0.0f, 0.0f
+		};
+	}
+
+	template<typename T> inline Matrix4<T> Translate(const Vector3<T>& vec) { return Translate(vec.x, vec.y, vec.z); }
+	template<typename T> inline Matrix4<T> Translate(const T& x, const T& y, const T& z) 
+	{
+		return 
+		{
+			1.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f,
+			x,	  y,	z,	  1.0f
+		};
+	}
+
+	template<typename T> inline Matrix4<T> operator*(const Matrix4<T>& lhs, const Matrix4<T>& rhs) 
+	{
+		Matrix4<T> result;
+		for (int c = 0; c < 4; c++)
+			for (int r = 0; r < 4; r++)
+				result.matrix[r][c] = lhs.matrix[r][0] * rhs.matrix[0][c] + lhs.matrix[r][1] * rhs.matrix[1][c] + lhs.matrix[r][2] * rhs.matrix[2][c] + lhs.matrix[r][3] * rhs.matrix[3][c];
+		return result;
+	}
+	
+	template<typename T> inline Matrix4<T> operator*(const T& lhs, const Matrix4<T>& rhs) 
+	{
+		Matrix4<T> result;
+		for (int c = 0; c < 4; c++)
+			for (int r = 0; r < 4; r++)
+				result[c][r] = lhs * rhs[c][r];
+		return result;
+	}
+
+	template<typename T> inline Vector3<T> operator*(const Matrix4<T>& lhs, const Vector3<T>& rhs) 
+	{
+		return { rhs.x * lhs.matrix[0][0] + rhs.y * lhs.matrix[1][0] + rhs.z * lhs.matrix[2][0] + lhs.matrix[3][0],
+				 rhs.x * lhs.matrix[0][1] + rhs.y * lhs.matrix[1][1] + rhs.z * lhs.matrix[2][1] + lhs.matrix[3][1],
+				 rhs.x * lhs.matrix[0][2] + rhs.y * lhs.matrix[1][2] + rhs.z * lhs.matrix[2][2] + lhs.matrix[3][2] };
+	}
+
+	template<typename T> inline Matrix4<T> ShearX(const T& y, const T& z)
+	{
+		Matrix4<T> result;
+		result.matrix[1][0] = y;
+		result.matrix[2][0] = z;
+		return result;
+	}
+
+	template<typename T> inline Matrix4<T> ShearY(const T& x, const T& z)
+	{
+		Matrix4<T> result;
+		result.matrix[0][1] = x;
+		result.matrix[2][1] = z;
+		return result;
+	}
+
+	template<typename T> inline Matrix4<T> ShearZ(const T& x, const T& y)
+	{
+		Matrix4<T> result;
+		result.matrix[0][2] = x;
+		result.matrix[1][2] = y;
+		return result;
+	}
+
+
+	template<typename T> inline Matrix4<T> Scale(const Vector3<T>& vec) { return Scale(vec.x, vec.y, vec.z); }
+	template<typename T> inline Matrix4<T> Scale(const T& x, const T& y, const T& z) 
+	{
+		Matrix4<T> result;
+		result.matrix[0][0] = x;
+		result.matrix[1][1] = y;
+		result.matrix[2][2] = z;
+		return result;
+	}
+
+	template<typename T> inline Matrix4<T> Projection(const T& fov_deg, const T& aspect_ratio, const T& z_near, const T& z_far)
+	{
+		float fov_rad = 1.0f / tanf(fov_deg * 0.5f / 180.0f * 3.14159f);
+		Matrix4<T> result;
+		result.matrix[0][0] = aspect_ratio * fov_rad;
+		result.matrix[1][1] = fov_rad;
+		result.matrix[2][2] = z_far / (z_far - z_near);
+		result.matrix[3][2] = (-z_far * z_near) / (z_far - z_near);
+		result.matrix[2][3] = 1.0f;
+		result.matrix[3][3] = 0.0f;
+		return result;
+	}
+
+	template<typename T> inline Matrix4<T> PointAt(const Vector3<T>& pos, const Vector3<T>& target, const Vector3<T>& up)
+	{
+		Vector3<T> new_forward = target - pos;
+		new_forward = new_forward.norm();
+		Vector3<T> new_up = up - (new_forward * up.dot(new_forward));
+		new_up = new_up.norm();
+		Vector3<T> new_right = new_up.cross(new_forward);
+
+		Matrix4<T> result;
+		result.matrix[0][0] = new_right.x;	result.matrix[0][1] = new_right.y;	result.matrix[0][2] = new_right.z;	result.matrix[0][3] = 0.0f;
+		result.matrix[1][0] = new_up.x;		result.matrix[1][1] = new_up.y;		result.matrix[1][2] = new_up.z;		result.matrix[1][3] = 0.0f;
+		result.matrix[2][0] = new_forward.x; result.matrix[2][1] = new_forward.y; result.matrix[2][2] = new_forward.z; result.matrix[2][3] = 0.0f;
+		result.matrix[3][0] = pos.x;		result.matrix[3][1] = pos.y;		result.matrix[3][2] = pos.z;		result.matrix[3][3] = 1.0f;
+		return result;
+	}
+
+	template<typename T> inline Matrix4<T> RotateX(const T& theta) 
+	{
+		Matrix4<T> result;
+		result.matrix[0][0] = 1.0f;
+		result.matrix[1][1] = cosf(theta);
+		result.matrix[1][2] = sinf(theta);
+		result.matrix[2][1] = -sinf(theta);
+		result.matrix[2][2] = cosf(theta);
+		result.matrix[3][3] = 1.0f;
+		return result;
+	}
+
+	template<typename T> inline Matrix4<T> RotateY(const T& theta) 
+	{
+		Matrix4<T> result;
+		result.matrix[0][0] = cosf(theta);
+		result.matrix[0][2] = sinf(theta);
+		result.matrix[2][0] = -sinf(theta);
+		result.matrix[1][1] = 1.0f;
+		result.matrix[2][2] = cosf(theta);
+		result.matrix[3][3] = 1.0f;
+		return result;
+	}
+
+	template<typename T> inline Matrix4<T> RotateZ(const T& theta) 
+	{
+		Matrix4<T> result;
+		result.matrix[0][0] = cosf(theta);
+		result.matrix[0][1] = sinf(theta);
+		result.matrix[1][0] = -sinf(theta);
+		result.matrix[1][1] = cosf(theta);
+		result.matrix[2][2] = 1.0f;
+		result.matrix[3][3] = 1.0f;
+		return result;
+	}
+
+	template<typename T> inline Matrix4<T> Orthogonal(const T& r, const T& l,
+													  const T& t, const T& b,
+													  const T& f, const T& n)
+	{
+		Matrix4<T> result;
+		result.matrix[0][0] = 2.0f / (r - l);
+		result.matrix[1][1] = 2.0f / (t - b);
+		result.matrix[2][2] = -2.0f / (f - n);
+		result.matrix[0][3] = (r + l) / (l - r);
+		result.matrix[1][3] = (t + b) / (b - t);
+		result.matrix[2][3] = (f + n) / (n - f);
+		result.matrix[3][3] = 1.0f;
+		return result;
+	}
+
+	template<typename T>
+	struct Triangle 
+	{ 
+		Vector3<T> p[3];
+		short col = WHITE;
+		short sym = SOLID;
+
+		Vector3<T>& operator[](const int& i) { return p[i]; }
+		Vector3<T> operator[](const int& i) const { return p[i]; }
+		Triangle norm() { return { p[0].norm(), p[1].norm(), p[2].norm() }; }
+	};
+
+	template<typename T> inline Triangle<T> operator*(const Matrix4<T>& lhs, const Triangle<T>& rhs) { return { lhs * rhs.p[0], lhs * rhs.p[1], lhs * rhs.p[2] }; }
+	template<typename T> inline Triangle<T> operator+(const Triangle<T>& lhs, const Vector3<T>& rhs) { return { rhs + lhs.p[0], rhs + lhs.p[1], rhs + lhs.p[2] }; }
+	template<typename T> inline Triangle<T> operator*(const Triangle<T>& lhs, const Vector3<T>& rhs) { return { rhs * lhs.p[0], rhs * lhs.p[1], rhs * lhs.p[2] }; }
+
+	template<typename T> struct Mesh { std::vector<Triangle<T>> tris; };
+	 
 	class Engine
 	{
 	private:
@@ -611,7 +604,7 @@ namespace NAGE
 			cfi.FontFamily = FF_DONTCARE;
 			cfi.FontWeight = FW_NORMAL;
 
-			wcscpy_s(cfi.FaceName, L"Fixedsys");
+			wcscpy_s(cfi.FaceName, L"Consolas");
 
 			SetCurrentConsoleFontEx(console, false, &cfi);
 
@@ -814,6 +807,17 @@ namespace NAGE
 			*/
 		}
 
+		void DrawTriangle(Vector3<Vector2<int>> v, short col = WHITE, short pixel_type = SOLID) 
+		{
+			DrawTriangle(v[0].x, v[0].y, v[1].x, v[1].y, v[2].x, v[2].y, col, pixel_type);
+		}
+		void DrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, short col = WHITE, short pixel_type = SOLID)
+		{
+			DrawLine(x1, y1, x2, y2, col, pixel_type);
+			DrawLine(x2, y2, x3, y3, col, pixel_type);
+			DrawLine(x3, y3, x1, y1, col, pixel_type);
+		}
+
 		CHAR_INFO GetShade(float lum)
 		{
 			short bg_col, fg_col;
@@ -821,24 +825,24 @@ namespace NAGE
 			int pixel_bw = (int)(13.0f * lum);
 			switch (pixel_bw)
 			{
-			case 0: bg_col = BLACK; fg_col = BLACK; sym = SOLID; break;
+			case 0: bg_col = BLACK << 4; fg_col = BLACK; sym = SOLID; break;
 
-			case 1: bg_col = BLACK; fg_col = DARK_GREY; sym = QUARTER; break;
-			case 2: bg_col = BLACK; fg_col = DARK_GREY; sym = HALF; break;
-			case 3: bg_col = BLACK; fg_col = DARK_GREY; sym = THREEQUARTERS; break;
-			case 4: bg_col = BLACK; fg_col = DARK_GREY; sym = SOLID; break;
+			case 1: bg_col = BLACK << 4; fg_col = DARK_GREY; sym = QUARTER; break;
+			case 2: bg_col = BLACK << 4; fg_col = DARK_GREY; sym = HALF; break;
+			case 3: bg_col = BLACK << 4; fg_col = DARK_GREY; sym = THREEQUARTERS; break;
+			case 4: bg_col = BLACK << 4; fg_col = DARK_GREY; sym = SOLID; break;
 
-			case 5: bg_col = DARK_GREY; fg_col = GREY; sym = QUARTER; break;
-			case 6: bg_col = DARK_GREY; fg_col = GREY; sym = HALF; break;
-			case 7: bg_col = DARK_GREY; fg_col = GREY; sym = THREEQUARTERS; break;
-			case 8: bg_col = DARK_GREY; fg_col = GREY; sym = SOLID; break;
+			case 5: bg_col = DARK_GREY << 4; fg_col = GREY; sym = QUARTER; break;
+			case 6: bg_col = DARK_GREY << 4; fg_col = GREY; sym = HALF; break;
+			case 7: bg_col = DARK_GREY << 4; fg_col = GREY; sym = THREEQUARTERS; break;
+			case 8: bg_col = DARK_GREY << 4; fg_col = GREY; sym = SOLID; break;
 
-			case 9:  bg_col = GREY; fg_col = WHITE; sym = QUARTER; break;
-			case 10: bg_col = GREY; fg_col = WHITE; sym = HALF; break;
-			case 11: bg_col = GREY; fg_col = WHITE; sym = THREEQUARTERS; break;
-			case 12: bg_col = GREY; fg_col = WHITE; sym = SOLID; break;
+			case 9:  bg_col = GREY << 4; fg_col = WHITE; sym = QUARTER; break;
+			case 10: bg_col = GREY << 4; fg_col = WHITE; sym = HALF; break;
+			case 11: bg_col = GREY << 4; fg_col = WHITE; sym = THREEQUARTERS; break;
+			case 12: bg_col = GREY << 4; fg_col = WHITE; sym = SOLID; break;
 			default:
-				bg_col = BLACK; fg_col = BLACK; sym = SOLID;
+				bg_col = BLACK << 4; fg_col = BLACK; sym = SOLID;
 			}
 
 			CHAR_INFO c;
@@ -858,4 +862,4 @@ namespace NAGE
 
 }
 
-#endif // !NAGE_H
+#endif
