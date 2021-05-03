@@ -728,6 +728,7 @@ namespace NAGE
 			DrawLine(vec1.x, vec1.y, vec2.x, vec2.y, colour, pixel_type, width);
 		}
 
+
 		void DrawLine(int x1, int y1, int x2, int y2, short colour = WHITE, short pixel_type = SOLID, int width = 1)
 		{	//  DDA
 			int dx, dy, steps;
@@ -811,6 +812,12 @@ namespace NAGE
 		{
 			DrawTriangle(v[0].x, v[0].y, v[1].x, v[1].y, v[2].x, v[2].y, col, pixel_type);
 		}
+
+		template<typename T> void DrawTriangle(Triangle<T> v)
+		{
+			DrawTriangle(v[0].x, v[0].y, v[1].x, v[1].y, v[2].x, v[2].y, v.col, v.sym);
+		}
+
 		void DrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, short col = WHITE, short pixel_type = SOLID)
 		{
 			DrawLine(x1, y1, x2, y2, col, pixel_type);
@@ -825,24 +832,24 @@ namespace NAGE
 			int pixel_bw = (int)(13.0f * lum);
 			switch (pixel_bw)
 			{
-			case 0: bg_col = BLACK << 4; fg_col = BLACK; sym = SOLID; break;
+			case 0: bg_col = BLACK; fg_col = BLACK; sym = SOLID; break;
 
-			case 1: bg_col = BLACK << 4; fg_col = DARK_GREY; sym = QUARTER; break;
-			case 2: bg_col = BLACK << 4; fg_col = DARK_GREY; sym = HALF; break;
-			case 3: bg_col = BLACK << 4; fg_col = DARK_GREY; sym = THREEQUARTERS; break;
-			case 4: bg_col = BLACK << 4; fg_col = DARK_GREY; sym = SOLID; break;
+			case 1: bg_col = BLACK; fg_col = DARK_GREY; sym = QUARTER; break;
+			case 2: bg_col = BLACK; fg_col = DARK_GREY; sym = HALF; break;
+			case 3: bg_col = BLACK; fg_col = DARK_GREY; sym = THREEQUARTERS; break;
+			case 4: bg_col = BLACK; fg_col = DARK_GREY; sym = SOLID; break;
 
-			case 5: bg_col = DARK_GREY << 4; fg_col = GREY; sym = QUARTER; break;
-			case 6: bg_col = DARK_GREY << 4; fg_col = GREY; sym = HALF; break;
-			case 7: bg_col = DARK_GREY << 4; fg_col = GREY; sym = THREEQUARTERS; break;
-			case 8: bg_col = DARK_GREY << 4; fg_col = GREY; sym = SOLID; break;
+			case 5: bg_col = DARK_GREY; fg_col = GREY; sym = QUARTER; break;
+			case 6: bg_col = DARK_GREY; fg_col = GREY; sym = HALF; break;
+			case 7: bg_col = DARK_GREY; fg_col = GREY; sym = THREEQUARTERS; break;
+			case 8: bg_col = DARK_GREY; fg_col = GREY; sym = SOLID; break;
 
-			case 9:  bg_col = GREY << 4; fg_col = WHITE; sym = QUARTER; break;
-			case 10: bg_col = GREY << 4; fg_col = WHITE; sym = HALF; break;
-			case 11: bg_col = GREY << 4; fg_col = WHITE; sym = THREEQUARTERS; break;
-			case 12: bg_col = GREY << 4; fg_col = WHITE; sym = SOLID; break;
+			case 9:  bg_col = GREY; fg_col = WHITE; sym = QUARTER; break;
+			case 10: bg_col = GREY; fg_col = WHITE; sym = HALF; break;
+			case 11: bg_col = GREY; fg_col = WHITE; sym = THREEQUARTERS; break;
+			case 12: bg_col = GREY; fg_col = WHITE; sym = SOLID; break;
 			default:
-				bg_col = BLACK << 4; fg_col = BLACK; sym = SOLID;
+				bg_col = BLACK; fg_col = BLACK; sym = SOLID;
 			}
 
 			CHAR_INFO c;
