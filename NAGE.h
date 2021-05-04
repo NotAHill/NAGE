@@ -664,9 +664,15 @@ namespace NAGE
 			}
 		}
 
-		virtual void Draw(const Vector2<int>& vec1, short colour = WHITE, short pixel_type = SOLID)
+		void Draw(const Vector2<int>& vec1, short colour = WHITE, short pixel_type = SOLID)
 		{
 			Draw(vec1.x, vec1.y, colour, pixel_type);
+		}
+
+		void Draw(int x, int y, float lum)
+		{
+			CHAR_INFO c = GetShade(lum);
+			Draw(x, y, c.Attributes, c.Char.UnicodeChar);
 		}
 
 		virtual void Draw(int x, int y, short colour = WHITE, short pixel_type = SOLID)
@@ -818,11 +824,76 @@ namespace NAGE
 			DrawTriangle(v[0].x, v[0].y, v[1].x, v[1].y, v[2].x, v[2].y, v.col, v.sym);
 		}
 
+		template<typename T> void DrawAATriangle(Triangle<T> v)
+		{
+			DrawAATriangle(v[0].x, v[0].y, v[1].x, v[1].y, v[2].x, v[2].y);
+		}
+
+		void DrawAATriangle(int x1, int y1, int x2, int y2, int x3, int y3)
+		{
+			DrawAALine(x1, y1, x2, y2);//col, pixel_type);
+			DrawAALine(x2, y2, x3, y3);//col, pixel_type);
+			DrawAALine(x3, y3, x1, y1);//col, pixel_type);
+		}
+
 		void DrawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, short col = WHITE, short pixel_type = SOLID)
 		{
 			DrawLine(x1, y1, x2, y2, col, pixel_type);
 			DrawLine(x2, y2, x3, y3, col, pixel_type);
 			DrawLine(x3, y3, x1, y1, col, pixel_type);
+		}
+
+		void DrawAALine(int x1, int y1, int x2, int y2)
+		{
+			auto ipart = [](float x) { return int(std::floorf(x)); };
+			auto fpart = [](float x) { return x - std::floorf(x); };
+			auto rfpart = [=](float x) { return 1.0f - fpart(x); };
+
+			bool steep = std::abs(y2 - y1) > std::abs(x2 - x1);
+
+			if (steep)
+			{
+				std::swap(x1, y1);
+				std::swap(x2, y2);
+			}
+
+			if (x1 > x2)
+			{
+				std::swap(x1, x2);
+				std::swap(y1, y2);
+			}
+
+			float dx = x2 - x1;
+			float dy = y2 - y1;
+			float gradient = (dx == 0.0f) ? 1.0f : dy / dx;
+			float intery = y1 + gradient;
+
+			if (steep)
+			{
+				Draw(y1, x1, 0.5f);
+				Draw(y1 + 1, x1, 0.0f);
+				Draw(y2, x2, 0.5f);
+				Draw(y2 + 1, x2, 0.0f);
+				for (int x = x1 + 1; x <= x2 - 1; x++)
+				{
+					Draw(ipart(intery), x, rfpart(intery));
+					Draw(ipart(intery) + 1, x, fpart(intery));
+					intery += gradient;
+				}
+			}
+			else
+			{
+				Draw(x1, y1, 0.5f);
+				Draw(x1, y1 + 1, 0.0f);
+				Draw(x2, y2, 0.5f);
+				Draw(x2, y2 + 1, 0.0f);
+				for (int x = x1 + 1; x <= x2 - 1; x++)
+				{
+					Draw(x, ipart(intery), rfpart(intery));
+					Draw(x, ipart(intery) + 1, fpart(intery));
+					intery += gradient;
+				}
+			}
 		}
 
 		CHAR_INFO GetShade(float lum)
@@ -832,24 +903,24 @@ namespace NAGE
 			int pixel_bw = (int)(13.0f * lum);
 			switch (pixel_bw)
 			{
-			case 0: bg_col = BLACK; fg_col = BLACK; sym = SOLID; break;
+			case 0: bg_col = BLACK << 4; fg_col = BLACK; sym = SOLID; break;
 
-			case 1: bg_col = BLACK; fg_col = DARK_GREY; sym = QUARTER; break;
-			case 2: bg_col = BLACK; fg_col = DARK_GREY; sym = HALF; break;
-			case 3: bg_col = BLACK; fg_col = DARK_GREY; sym = THREEQUARTERS; break;
-			case 4: bg_col = BLACK; fg_col = DARK_GREY; sym = SOLID; break;
+			case 1: bg_col = BLACK << 4; fg_col = DARK_GREY; sym = QUARTER; break;
+			case 2: bg_col = BLACK << 4; fg_col = DARK_GREY; sym = HALF; break;
+			case 3: bg_col = BLACK << 4; fg_col = DARK_GREY; sym = THREEQUARTERS; break;
+			case 4: bg_col = BLACK << 4; fg_col = DARK_GREY; sym = SOLID; break;
 
-			case 5: bg_col = DARK_GREY; fg_col = GREY; sym = QUARTER; break;
-			case 6: bg_col = DARK_GREY; fg_col = GREY; sym = HALF; break;
-			case 7: bg_col = DARK_GREY; fg_col = GREY; sym = THREEQUARTERS; break;
-			case 8: bg_col = DARK_GREY; fg_col = GREY; sym = SOLID; break;
+			case 5: bg_col = DARK_GREY << 4; fg_col = GREY; sym = QUARTER; break;
+			case 6: bg_col = DARK_GREY << 4; fg_col = GREY; sym = HALF; break;
+			case 7: bg_col = DARK_GREY << 4; fg_col = GREY; sym = THREEQUARTERS; break;
+			case 8: bg_col = DARK_GREY << 4; fg_col = GREY; sym = SOLID; break;
 
-			case 9:  bg_col = GREY; fg_col = WHITE; sym = QUARTER; break;
-			case 10: bg_col = GREY; fg_col = WHITE; sym = HALF; break;
-			case 11: bg_col = GREY; fg_col = WHITE; sym = THREEQUARTERS; break;
-			case 12: bg_col = GREY; fg_col = WHITE; sym = SOLID; break;
+			case 9:  bg_col = GREY << 4; fg_col = WHITE; sym = QUARTER; break;
+			case 10: bg_col = GREY << 4; fg_col = WHITE; sym = HALF; break;
+			case 11: bg_col = GREY << 4; fg_col = WHITE; sym = THREEQUARTERS; break;
+			case 12: bg_col = GREY << 4; fg_col = WHITE; sym = SOLID; break;
 			default:
-				bg_col = BLACK; fg_col = BLACK; sym = SOLID;
+				bg_col = BLACK << 4; fg_col = BLACK; sym = SOLID;
 			}
 
 			CHAR_INFO c;
